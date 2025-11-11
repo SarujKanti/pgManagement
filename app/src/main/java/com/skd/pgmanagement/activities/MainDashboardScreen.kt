@@ -16,9 +16,6 @@ import com.skd.pgmanagement.networks.ApiEndPoints
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.GetHomeResponse
 import com.skd.pgmanagement.views.BaseActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

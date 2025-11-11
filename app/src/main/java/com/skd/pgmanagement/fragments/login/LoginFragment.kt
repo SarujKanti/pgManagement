@@ -164,10 +164,11 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
                             val sharedPrefs = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
                             sharedPrefs.edit()
                                 .putString("auth_token", loginResponse.token)
+                                .putString("groupId", loginResponse.groupId)
                                 .apply()
 
                             Toast.makeText(requireContext(), "Login successful!", Toast.LENGTH_SHORT).show()
-
+                            RetrofitClient.homeApiService(requireContext())
                             val intent = Intent(requireContext(), MainDashboardScreen::class.java)
                             intent.putExtra("PreferencesConstants.GROUP_ID", loginResponse.groupId)
                             startActivity(intent)
