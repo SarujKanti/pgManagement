@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Saruj Kanti Das</string>
+
+    <string name="enter_your_mobile_number">Enter your mobile number</string>
+    <string name="country_code">+91</string>
+    <string name="enter_your_phone_number">Enter your phone number</string>
+    <string name="save_btn">Submit</string>
+    <string name="enter_password">Please enter your password</string>
+</resources>
