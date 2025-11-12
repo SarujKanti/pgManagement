@@ -1,5 +1,6 @@
 package com.skd.pgmanagement.activities
 
+import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -11,22 +12,21 @@ import android.view.Gravity
 import android.view.Window
 import android.view.WindowManager
 import android.widget.TextView
-import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.skd.pgmanagement.R
 import com.skd.pgmanagement.activities.loginPage.LoginActivity
 import com.skd.pgmanagement.adapters.HomeCategoryAdapter
+import com.skd.pgmanagement.constants.StringConstants
 import com.skd.pgmanagement.databinding.ActivityMainDashboardBinding
-import com.skd.pgmanagement.networks.ApiEndPoints
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.ActivityData
-import com.skd.pgmanagement.networks.dataModel.GetHomeResponse
-import com.skd.pgmanagement.networks.dataModel.GetIDCardResponse
+import com.skd.pgmanagement.utils.showToast
 import com.skd.pgmanagement.views.BaseActivity
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.activity_main_dashboard) {
 
@@ -37,33 +37,84 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sharedPreferences = getSharedPreferences(StringConstants.SHARED_PREFERENCE, Context.MODE_PRIVATE)
+        groupId = intent.getStringExtra(StringConstants.GROUP_ID)
         initToolbar()
-        groupId = intent.getStringExtra("PreferencesConstants.GROUP_ID")
-        sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-        showProgressBar()
-        getHomeApi()
-        getProfileApi()
         setupLogoutDialog()
+        showProgressBar()
+        loadDashboardData()
     }
 
+    /**  Handles Toolbar Actions */
     private fun initToolbar() {
         binding.ivMore.setOnClickListener {
             homeDataList?.let {
                 showPartialFullscreenDialog(it, profileName)
-            } ?: Toast.makeText(this, "Data not loaded yet", Toast.LENGTH_SHORT).show()
+            } ?: showToast(getString(R.string.data_not_loaded))
         }
     }
 
+    /**  Loads both home & profile data asynchronously */
+    private fun loadDashboardData() {
+        lifecycleScope.launch {
+            try {
+                val homeDeferred = launch { loadHomeData() }
+                val profileDeferred = launch { loadProfileData() }
+
+                homeDeferred.join()
+                profileDeferred.join()
+            } finally {
+                dismissProgressBar()
+            }
+        }
+    }
+
+    /**  Fetch Home Data using coroutine */
+    private suspend fun loadHomeData() {
+        groupId?.let { id ->
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.homeApiService(this@MainDashboardScreen).getHomeGroupsSuspend(id)
+                }
+                if (response.isSuccessful && response.body() != null) {
+                    homeDataList = response.body()?.data
+                } else {
+                    showToast("${getString(R.string.txt_error)}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                showToast("${getString(R.string.txt_failure)}:: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    /**  Fetch Profile Data using coroutine */
+    private suspend fun loadProfileData() {
+        groupId?.let { id ->
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.profileApiService(this@MainDashboardScreen).getKidSProfileSuspend(id)
+                }
+                if (response.isSuccessful && response.body() != null) {
+                    profileName = response.body()?.data?.firstOrNull()?.name
+                } else {
+                    showToast("${getString(R.string.txt_error)}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                showToast("${getString(R.string.txt_failure)}:: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    /**  Shows Home Dialog with Data */
     private fun showPartialFullscreenDialog(data: List<ActivityData>, userName: String?) {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_fullscreen_partial)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        val metrics = resources.displayMetrics
-        val width = (metrics.widthPixels * 0.7).toInt()
-        dialog.window?.setLayout(width, WindowManager.LayoutParams.MATCH_PARENT)
-        dialog.window?.setGravity(Gravity.START)
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout((resources.displayMetrics.widthPixels * 0.7).toInt(), WindowManager.LayoutParams.MATCH_PARENT)
+            setGravity(Gravity.START)
+        }
 
         val tvDialogContent = dialog.findViewById<TextView>(R.id.tvDialogContent)
         tvDialogContent.text = userName ?: ""
@@ -75,86 +126,28 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
         dialog.show()
     }
 
-
-    private fun getHomeApi() {
-        val groupApi = RetrofitClient.homeApiService(this)
-        groupId?.let {
-            groupApi.getHomeGroups(it).enqueue(object : Callback<GetHomeResponse> {
-                override fun onResponse(call: Call<GetHomeResponse>, response: Response<GetHomeResponse>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        dismissProgressBar()
-                        val groupResponse = response.body()
-
-                        groupResponse?.data?.let { activityList ->
-                            // When ivMore is clicked, show dialog with API data
-                            binding.ivMore.setOnClickListener {
-                                showPartialFullscreenDialog(activityList, profileName)
-                            }
-                        }
-                    } else {
-                        Toast.makeText(this@MainDashboardScreen, "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onFailure(call: Call<GetHomeResponse>, t: Throwable) {
-                    Toast.makeText(this@MainDashboardScreen, "Failure: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
-    }
-
-    private fun getProfileApi() {
-        val groupApi = RetrofitClient.profileApiService(this)
-        groupId?.let {
-            groupApi.getKidSProfile(it).enqueue(object : Callback<GetIDCardResponse> {
-                override fun onResponse(call: Call<GetIDCardResponse>, response: Response<GetIDCardResponse>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        dismissProgressBar()
-                        val groupResponse = response.body()
-
-                        groupResponse?.data?.let { profileList ->
-                            profileName = profileList.firstOrNull()?.name
-                        }
-                    } else {
-                        Toast.makeText(this@MainDashboardScreen, "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onFailure(call: Call<GetIDCardResponse>, t: Throwable) {
-                    Toast.makeText(this@MainDashboardScreen, "Failure: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
-    }
-
+    /**  Logout Dialog */
     private fun setupLogoutDialog() {
         binding.ivDelete.setOnClickListener {
-            val builder = android.app.AlertDialog.Builder(this)
-            builder.setTitle("Logout")
-            builder.setMessage("Are you sure you want to logout?")
-            builder.setCancelable(true)
+            AlertDialog.Builder(this).apply {
+                setTitle(getString(R.string.txt_Logout))
+                setMessage(getString(R.string.txt_sure_logout))
+                setCancelable(true)
 
-            builder.setPositiveButton("OK") { dialog, _ ->
-                val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-                sharedPreferences.edit().clear().apply()
+                setPositiveButton(getString(R.string.txt_ok)) { dialog, _ ->
+                    sharedPreferences.edit().clear().apply()
+                    showToast(getString(R.string.txt_success_logout))
+                    dialog.dismiss()
 
-                Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
+                    val intent = Intent(this@MainDashboardScreen, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
 
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                setNegativeButton(getString(R.string.txt_Cancel)) { dialog, _ -> dialog.dismiss() }
+                show()
             }
-
-            builder.setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
-
-            val alertDialog = builder.create()
-            alertDialog.show()
         }
     }
-
-
 }

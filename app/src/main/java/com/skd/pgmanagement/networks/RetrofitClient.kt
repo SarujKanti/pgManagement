@@ -3,6 +3,7 @@ package com.skd.pgmanagement.networks
 import android.content.Context
 import com.google.gson.GsonBuilder
 import com.skd.pgmanagement.constants.Constants
+import com.skd.pgmanagement.constants.StringConstants
 import com.skd.pgmanagement.networks.dataModel.GetHomeApi
 import com.skd.pgmanagement.networks.dataModel.GetKidSProfile
 import com.skd.pgmanagement.networks.dataModel.LoginApi
@@ -13,11 +14,10 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
 class AuthInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
-        val sharedPreferences = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-        val token = sharedPreferences.getString("auth_token", null)
+        val sharedPreferences = context.getSharedPreferences(StringConstants.SHARED_PREFERENCE, Context.MODE_PRIVATE)
+        val token = sharedPreferences.getString(StringConstants.AUTH_TOKEN, null)
         val requestBuilder = chain.request().newBuilder()
 
         // Add Authorization header with Bearer token if available

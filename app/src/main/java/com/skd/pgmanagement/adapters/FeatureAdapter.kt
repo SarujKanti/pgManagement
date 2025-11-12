@@ -29,6 +29,14 @@ class FeatureAdapter(private val features: List<FeatureIcon>) :
         Glide.with(holder.itemView.context)
             .load(feature.image)
             .into(holder.binding.featureIcon)
+
+        holder.binding.root.setOnClickListener {
+            handleFeatureClick(feature)
+        }
+
+    }
+    private fun handleFeatureClick(featureIcon: FeatureIcon){
+
     }
 
     override fun getItemCount(): Int = features.size

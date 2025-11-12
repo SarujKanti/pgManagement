@@ -2,6 +2,7 @@ package com.skd.pgmanagement.networks.dataModel
 
 import com.skd.pgmanagement.networks.ApiEndPoints
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -21,5 +22,5 @@ data class IdItem(
 
 interface GetKidSProfile {
     @GET(ApiEndPoints.GET_PROFILE_API)
-    fun getKidSProfile(@Path("groupId") groupId: String): Call<GetIDCardResponse>
+    suspend fun getKidSProfileSuspend(@Path("groupId") groupId: String): Response<GetIDCardResponse>
 }

@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.skd.pgmanagement.R
 import com.skd.pgmanagement.activities.MainDashboardScreen
 import com.skd.pgmanagement.activities.loginPage.LoginActivity
+import com.skd.pgmanagement.constants.StringConstants
 import com.skd.pgmanagement.databinding.LoginFragmentBinding
 import com.skd.pgmanagement.views.BaseFragment
 import com.skd.pgmanagement.networks.RetrofitClient
@@ -24,6 +25,7 @@ import com.skd.pgmanagement.networks.dataModel.LoginResponse
 import com.skd.pgmanagement.networks.dataModel.UserExistRequest
 import com.skd.pgmanagement.networks.dataModel.UserExistResponse
 import com.skd.pgmanagement.networks.dataModel.UserName
+import com.skd.pgmanagement.utils.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -87,7 +89,7 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
             val phone = binding.phoneNumberEditText.text.toString().trim()
 
             if (phone.length != 10) {
-                Toast.makeText(requireContext(), "Please enter valid phone number", Toast.LENGTH_SHORT).show()
+                requireContext().showToast(getString(R.string.enter_valid_number))
                 return@setOnClickListener
             }
 
@@ -97,7 +99,7 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
             } else {
                 enteredPassword = binding.password.text.toString().trim()
                 if (enteredPassword.isNullOrEmpty()) {
-                    Toast.makeText(requireContext(), "Please enter your password", Toast.LENGTH_SHORT).show()
+                    requireContext().showToast(getString(R.string.enter_your_password))
                     return@setOnClickListener
                 }
                 userPasswordCheck(phone, "IN", enteredPassword!!)
@@ -122,15 +124,16 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
                             isUserExist = true
                             binding.llPassword.visibility = View.VISIBLE
                         } else {
-                            Toast.makeText(requireContext(), "User not found. Please register first.", Toast.LENGTH_SHORT).show()
+                            requireContext().showToast(getString(R.string.user_not_found))
                         }
                     } else {
-                        Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
+                        requireContext().showToast("${getString(R.string.txt_error)}: ${response.message()}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Failure: ${e.message}", Toast.LENGTH_SHORT).show()
+                    requireContext().showToast("${getString(R.string.txt_failure)}:: ${e.localizedMessage}")
                 }
             }
         }
@@ -165,29 +168,31 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
                         val loginResponse: LoginResponse? = response.body()
                         containerActivity().dismissProgressBar()
                         if (loginResponse != null) {
-                            val sharedPrefs = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+                            val sharedPrefs = requireContext().getSharedPreferences(StringConstants.SHARED_PREFERENCE, Context.MODE_PRIVATE)
                             sharedPrefs.edit()
-                                .putString("auth_token", loginResponse.token)
-                                .putString("groupId", loginResponse.groupId)
+                                .putString(StringConstants.AUTH_TOKEN, loginResponse.token)
+                                .putString(StringConstants.GROUP_ID, loginResponse.groupId)
                                 .apply()
 
-                            Toast.makeText(requireContext(), "Login successful!", Toast.LENGTH_SHORT).show()
+                            requireContext().showToast(getString(R.string.success_login))
                             RetrofitClient.homeApiService(requireContext())
                             val intent = Intent(requireContext(), MainDashboardScreen::class.java)
-                            intent.putExtra("PreferencesConstants.GROUP_ID", loginResponse.groupId)
+                            intent.putExtra(StringConstants.GROUP_ID, loginResponse.groupId)
                             startActivity(intent)
                             requireActivity().finish()
                         } else {
-                            Toast.makeText(requireContext(), "Login response is null", Toast.LENGTH_SHORT).show()
+                            requireContext().showToast(getString(R.string.check_internet_connection))
                         }
                     }
                     else {
-                        Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
+                        requireContext().showToast("${getString(R.string.txt_error)}: ${response.message()}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Failure: ${e.message}", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(requireContext(), "Failure: ${e.message}", Toast.LENGTH_SHORT).show()
+                        requireContext().showToast("${getString(R.string.txt_failure)}:: ${e.localizedMessage}")
                 }
             }
         }

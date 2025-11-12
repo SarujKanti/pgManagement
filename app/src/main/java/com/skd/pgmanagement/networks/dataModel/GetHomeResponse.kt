@@ -65,5 +65,5 @@ data class Details(
 
 interface GetHomeApi {
     @GET(ApiEndPoints.GET_HOME_API)
-     fun getHomeGroups(@Path("groupId") groupId: String): Call<GetHomeResponse>
+    suspend fun getHomeGroupsSuspend(@Path("groupId") groupId: String): Response<GetHomeResponse>
 }

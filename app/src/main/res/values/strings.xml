@@ -6,4 +6,18 @@
     <string name="enter_your_phone_number">Enter your phone number</string>
     <string name="save_btn">Submit</string>
     <string name="enter_password">Please enter your password</string>
+    <string name="txt_Logout">Logout</string>
+    <string name="txt_ok">OK</string>
+    <string name="txt_Cancel">Cancel</string>
+    <string name="txt_sure_logout">Are you sure you want to logout?</string>
+    <string name="txt_success_logout">Logged out successfully</string>
+    <string name="txt_error">Error</string>
+    <string name="txt_failure">Failure</string>
+    <string name="data_not_loaded">Data not loaded yet</string>
+    <string name="enter_valid_number">Please enter valid phone number</string>
+    <string name="enter_your_password">Please enter your password</string>
+    <string name="user_not_found">User not found!! \n Please register first</string>
+    <string name="success_login">Login successful!</string>
+    <string name="check_internet_connection">Something went wrong !! \n Please check internet connection</string>
+
 </resources>
