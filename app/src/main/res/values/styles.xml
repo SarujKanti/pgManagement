@@ -1,0 +1,52 @@
+<resources>
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here -->
+        <item name="colorPrimary">@color/purple_200</item>
+        <item name="colorPrimaryDark">@color/color_privacy_policy</item>
+        <item name="colorAccent">@color/color_edt_bg</item>
+    </style>
+    <style name="LabelEmptyText">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="LabelHeader2">
+        <item name="android:textSize">@dimen/text_size_18sp</item>
+    </style>
+    <style name="LabelNormal">
+        <item name="android:textColor">@color/textColor</item>
+        <item name="android:textSize">@dimen/text_size_14sp</item>
+    </style>
+
+
+    <!-- Custom style for menu item text appearance -->
+    <style name="CustomMenuTextAppearance" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textColor">#FFFFFF</item> <!-- Set the text color -->
+        <item name="android:background">@drawable/bg_button_enabler</item> <!-- Set background for the text -->
+    </style>
+    <style name="AddMore" parent="Base.Widget.AppCompat.Button">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:background">@drawable/bg_button_white_color</item>
+        <item name="android:textSize">@dimen/text_size_16sp</item>
+    </style>
+    <style name="AddPostButton" parent="Base.Widget.AppCompat.Button"/>
+
+
+    <style name="ShapeAppearance.Circular" parent="ShapeAppearance.MaterialComponents">
+        <item name="cornerSize">50%</item> <!-- Makes it circular -->
+    </style>
+    <style name="CustomTabTextStyle" parent="TextAppearance.Design.Tab">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white2</item>
+        <item name="android:layout_marginTop">1dp</item>
+    </style>
+    <style name="commonSpinnerWhite" parent="Base.Widget.AppCompat.EditText">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textSize">@dimen/text_size_16sp</item>
+        <item name="android:textColorHint">@color/colorPrimary</item>
+        <item name="android:background">@color/white</item>
+    </style>
+
+</resources>

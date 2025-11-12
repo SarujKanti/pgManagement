@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.skd.pgmanagement.R
 import com.skd.pgmanagement.activities.MainDashboardScreen
+import com.skd.pgmanagement.activities.loginPage.LoginActivity
 import com.skd.pgmanagement.databinding.LoginFragmentBinding
 import com.skd.pgmanagement.views.BaseFragment
 import com.skd.pgmanagement.networks.RetrofitClient
@@ -33,6 +34,8 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
     private var isPasswordVisible = false
     private var isUserExist = false
     private var enteredPassword: String? = null
+
+    private fun containerActivity() = (activity as LoginActivity)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -89,16 +92,16 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
             }
 
             if (!isUserExist) {
-                // First time → check user existence
                 checkUserExist(phone)
+                containerActivity().showProgressBar()
             } else {
-                // If user already exists → proceed with password check
                 enteredPassword = binding.password.text.toString().trim()
                 if (enteredPassword.isNullOrEmpty()) {
                     Toast.makeText(requireContext(), "Please enter your password", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 userPasswordCheck(phone, "IN", enteredPassword!!)
+                containerActivity().showProgressBar()
             }
         }
     }
@@ -113,6 +116,7 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
+                        containerActivity().dismissProgressBar()
                         val userExistResponse: UserExistResponse? = response.body()
                         if (userExistResponse != null && userExistResponse.data.isUserExist) {
                             isUserExist = true
@@ -159,7 +163,7 @@ class LoginFragment : BaseFragment<LoginFragmentBinding>(R.layout.login_fragment
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val loginResponse: LoginResponse? = response.body()
-
+                        containerActivity().dismissProgressBar()
                         if (loginResponse != null) {
                             val sharedPrefs = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
                             sharedPrefs.edit()

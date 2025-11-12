@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.gson.GsonBuilder
 import com.skd.pgmanagement.constants.Constants
 import com.skd.pgmanagement.networks.dataModel.GetHomeApi
+import com.skd.pgmanagement.networks.dataModel.GetKidSProfile
 import com.skd.pgmanagement.networks.dataModel.LoginApi
 import com.skd.pgmanagement.networks.dataModel.UserExist
 import okhttp3.Interceptor
@@ -62,5 +63,9 @@ object RetrofitClient {
 
     fun homeApiService(context: Context): GetHomeApi {
         return getRetrofit(context).create(GetHomeApi::class.java)
+    }
+
+    fun profileApiService(context: Context): GetKidSProfile {
+        return getRetrofit(context).create(GetKidSProfile::class.java)
     }
 }

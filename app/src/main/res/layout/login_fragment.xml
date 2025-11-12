@@ -136,7 +136,7 @@
                     android:paddingStart="@dimen/_19sdp"
                     android:paddingEnd="@dimen/_10sdp"
                     android:textColor="@color/black"
-                    android:textColorHint="@color/grey_light"
+                    android:textColorHint="@color/gray_new"
                     android:textSize="@dimen/_15ssp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"

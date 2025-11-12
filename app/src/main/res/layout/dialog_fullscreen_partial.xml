@@ -1,18 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/dialogRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="@dimen/_10ssp">
 
-    <!-- Add your dialog content here -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/leftImageView"
+        android:layout_width="@dimen/_100sdp"
+        android:layout_height="@dimen/_100sdp"
+        android:src="@drawable/bg_button_enabler"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/_10sdp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Circular" />
+
     <TextView
         android:id="@+id/tvDialogContent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_5sdp"
+        android:layout_marginBottom="@dimen/_10sdp"
         android:text="Saruj Kanti Das"
+        android:layout_gravity="center"
         android:textSize="18sp"
         android:textColor="@android:color/black" />
-</FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:background="@color/gray_new"
+        android:layout_height="@dimen/_3sdp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewCategories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:nestedScrollingEnabled="false"
+        android:padding="6dp"
+        android:layout_marginTop="@dimen/_10sdp"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_home_list" />
+</LinearLayout>

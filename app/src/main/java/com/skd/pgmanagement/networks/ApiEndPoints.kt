@@ -12,4 +12,6 @@ object ApiEndPoints {
     const val LOGIN_TRUE = "login/category/app?category=${appCategory}&appName=${appName}&addSchool=${addSchool}"
 
     const val GET_HOME_API = "groups/{groupId}/home"
+
+    const val GET_PROFILE_API = "groups/{groupId}/my/kids/profile"
 }
