@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialogRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+    android:padding="@dimen/_10ssp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_10dp"
+        android:layout_marginRight="@dimen/padding_10dp"
+        android:layout_marginBottom="@dimen/padding_10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_500"
+            android:layout_marginBottom="@dimen/_10sdp"
+            android:layout_marginVertical="@dimen/_10sdp"
+            android:layout_gravity="center"
+            android:textAllCaps="true"
+            android:text="@string/register_title"
+            android:textColor="@color/black"
+            android:textSize="@dimen/_15ssp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/countryFlag"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_5dp"
+            android:layout_marginBottom="@dimen/padding_3dp"
+            android:hint="@string/enter_name"
+            android:textColorHint="@color/black"
+            app:hintEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etName"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_50sdp"
+                android:background="@drawable/remarks_bg_layout"
+                android:backgroundTint="@color/gray_new"
+                android:fontFamily="@font/inter_600"
+                android:inputType="textCapWords"
+                android:paddingStart="15dp"
+                android:textSize="@dimen/text_size_14sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_5dp"
+            android:layout_marginBottom="@dimen/padding_3dp"
+            android:orientation="horizontal"
+            android:textColorHint="@color/black"
+            android:textSize="@dimen/text_size_14sp">
+
+            <LinearLayout
+                android:layout_width="95dp"
+                android:layout_height="@dimen/_50sdp"
+                android:layout_marginTop="-50dp"
+                android:background="@drawable/remarks_bg_layout"
+                android:gravity="center"
+                android:backgroundTint="@color/gray_new">
+
+                <ImageView
+                    android:id="@+id/countryFlag"
+                    android:layout_width="@dimen/_22sdp"
+                    android:layout_height="@dimen/_14sdp"
+                    android:layout_marginHorizontal="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_15sdp"
+                    android:layout_marginBottom="@dimen/_15sdp"
+                    android:src="@drawable/ic_indian_flag"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/countryCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_400"
+                    android:text="@string/country_code"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/_15ssp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/countryFlag"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_50sdp"
+                android:layout_marginStart="@dimen/padding_100dp"
+                android:background="@drawable/remarks_bg_layout"
+                android:backgroundTint="@color/gray_new"
+                android:fontFamily="@font/inter_600"
+                android:hint="@string/hint_phone"
+                android:inputType="phone"
+                android:maxLength="10"
+                android:paddingStart="15dp"
+                android:textSize="@dimen/text_size_14sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/llDesignation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_5dp"
+            android:layout_marginBottom="@dimen/padding_3dp"
+            android:hint="@string/hint_designation"
+            android:textColorHint="@color/black"
+            app:hintEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDesignation"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_50sdp"
+                android:background="@drawable/remarks_bg_layout"
+                android:backgroundTint="@color/gray_new"
+                android:fontFamily="@font/inter_600"
+                android:inputType="textCapWords"
+                android:paddingStart="15dp"
+                android:textSize="@dimen/text_size_14sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <android.widget.Button
+            android:id="@+id/imgAddStudent"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_50sdp"
+            android:layout_marginTop="@dimen/padding_25dp"
+            android:background="@drawable/rounded_button"
+            android:text="@string/save_btn"
+            android:textColor="@color/white"
+            android:fontFamily="@font/inter_600"
+            android:textAllCaps="false"
+            android:textSize="@dimen/_14ssp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.976"
+            tools:ignore="MissingConstraints" />
+
+    </LinearLayout>
+
+</LinearLayout>

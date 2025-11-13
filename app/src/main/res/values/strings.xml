@@ -21,5 +21,11 @@
     <string name="success_login">Login successful!</string>
     <string name="check_internet_connection">Something went wrong !! \n Please check internet connection</string>
     <string name="staff_register">Staff Register</string>
+    <string name="enter_name">Enter name</string>
+    <string name="hint_phone">Enter phone no.</string>
+    <string name="hint_designation">Enter designation</string>
+    <string name="register_title">Add new user</string>
+    <string name="fill_all_details">Please fill all fields</string>
+    <string name="failed_to_add">Failed to add staff</string>
 
 </resources>
