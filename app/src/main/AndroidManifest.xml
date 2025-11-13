@@ -35,6 +35,9 @@
             android:name=".activities.loginPage.LoginActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".activities.staffRegister.StaffRegisterActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
     </application>
 
 </manifest>

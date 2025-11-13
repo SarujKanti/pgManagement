@@ -34,6 +34,7 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
     private lateinit var sharedPreferences: SharedPreferences
     private var homeDataList: List<ActivityData>? = null
     private var profileName: String? = null
+    private var decodedImageUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +78,19 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
                     RetrofitClient.homeApiService(this@MainDashboardScreen).getHomeGroupsSuspend(id)
                 }
                 if (response.isSuccessful && response.body() != null) {
-                    homeDataList = response.body()?.data
+                    // Get original data
+                    val originalData = response.body()?.data
+
+                    // Filter features inside each activity
+                    homeDataList = originalData?.map { activity ->
+                        val filteredFeatures = activity.featureIcons.filter { feature ->
+                            (feature.type == StringConstants.SUBJECT_REGISTER || feature.type == StringConstants.STAFF_REGISTER
+                                    || feature.type == StringConstants.FEED_BACK || feature.type == StringConstants.GALLERY
+                                    || feature.type == StringConstants.HOSTEL || feature.type == StringConstants.MESSAGE || feature.type == StringConstants.NOTICE_BOARD )
+                        }
+                        activity.copy(featureIcons = filteredFeatures)
+                    }
+
                 } else {
                     showToast("${getString(R.string.txt_error)}: ${response.message()}")
                 }
@@ -94,8 +107,27 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
                 val response = withContext(Dispatchers.IO) {
                     RetrofitClient.profileApiService(this@MainDashboardScreen).getKidSProfileSuspend(id)
                 }
+
                 if (response.isSuccessful && response.body() != null) {
-                    profileName = response.body()?.data?.firstOrNull()?.name
+                    val firstItem = response.body()?.data?.firstOrNull()
+
+                    if (firstItem != null) {
+                        profileName = firstItem.name
+
+                        if (!firstItem.image.isNullOrEmpty()) {
+                            try {
+                                val decodedBytes = android.util.Base64.decode(firstItem.image, android.util.Base64.DEFAULT)
+                                val decodedString = String(decodedBytes)
+
+                                // validate decoded URL
+                                if (decodedString.startsWith("http") && !decodedString.contains("undefined")) {
+                                    decodedImageUrl = decodedString
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
                 } else {
                     showToast("${getString(R.string.txt_error)}: ${response.message()}")
                 }
@@ -104,6 +136,7 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
             }
         }
     }
+
 
     /**  Shows Home Dialog with Data */
     private fun showPartialFullscreenDialog(data: List<ActivityData>, userName: String?) {
@@ -117,14 +150,24 @@ class MainDashboardScreen : BaseActivity<ActivityMainDashboardBinding>(R.layout.
         }
 
         val tvDialogContent = dialog.findViewById<TextView>(R.id.tvDialogContent)
+        val leftImageView = dialog.findViewById<com.google.android.material.imageview.ShapeableImageView>(R.id.leftImageView)
         tvDialogContent.text = userName ?: ""
+
+        decodedImageUrl?.let {
+            com.bumptech.glide.Glide.with(this)
+                .load(it)
+                .placeholder(R.drawable.ic_launcher_background)
+                .error(R.drawable.ic_launcher_background)
+                .into(leftImageView)
+        }
 
         val recyclerView = dialog.findViewById<RecyclerView>(R.id.recyclerViewCategories)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = HomeCategoryAdapter(data)
+        recyclerView.adapter = HomeCategoryAdapter(data, groupId)
 
         dialog.show()
     }
+
 
     /**  Logout Dialog */
     private fun setupLogoutDialog() {

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Saruj Kanti Das</string>
 
+    <string name="lbl_no_data_found">No data Found</string>
     <string name="enter_your_mobile_number">Enter your mobile number</string>
     <string name="country_code">+91</string>
     <string name="enter_your_phone_number">Enter your phone number</string>
@@ -19,5 +20,6 @@
     <string name="user_not_found">User not found!! \n Please register first</string>
     <string name="success_login">Login successful!</string>
     <string name="check_internet_connection">Something went wrong !! \n Please check internet connection</string>
+    <string name="staff_register">Staff Register</string>
 
 </resources>

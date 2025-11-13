@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.skd.pgmanagement.databinding.ItemHomeListBinding
 import com.skd.pgmanagement.networks.dataModel.ActivityData
 
-class HomeCategoryAdapter(private val items: List<ActivityData>) :
+class HomeCategoryAdapter(private val items: List<ActivityData>, private val groupId: String?) :
     RecyclerView.Adapter<HomeCategoryAdapter.HomeCategoryViewHolder>() {
 
     inner class HomeCategoryViewHolder(val binding: ItemHomeListBinding) :
@@ -28,7 +28,7 @@ class HomeCategoryAdapter(private val items: List<ActivityData>) :
 
         holder.binding.rvActivityName.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = FeatureAdapter(item.featureIcons)
+            adapter = FeatureAdapter(item.featureIcons, groupId)
         }
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.gson.GsonBuilder
 import com.skd.pgmanagement.constants.Constants
 import com.skd.pgmanagement.constants.StringConstants
+import com.skd.pgmanagement.networks.dataModel.GetAllStaffApi
 import com.skd.pgmanagement.networks.dataModel.GetHomeApi
 import com.skd.pgmanagement.networks.dataModel.GetKidSProfile
 import com.skd.pgmanagement.networks.dataModel.LoginApi
@@ -67,5 +68,9 @@ object RetrofitClient {
 
     fun profileApiService(context: Context): GetKidSProfile {
         return getRetrofit(context).create(GetKidSProfile::class.java)
+    }
+
+    fun getStaffApiService(context: Context): GetAllStaffApi {
+        return getRetrofit(context).create(GetAllStaffApi::class.java)
     }
 }

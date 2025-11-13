@@ -14,4 +14,6 @@ object ApiEndPoints {
     const val GET_HOME_API = "groups/{groupId}/home"
 
     const val GET_PROFILE_API = "groups/{groupId}/my/kids/profile"
+
+    const val GET_ALL_STAFFS = "groups/{groupId}/staff/get"
 }
