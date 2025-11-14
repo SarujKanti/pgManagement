@@ -28,6 +28,7 @@ import com.skd.pgmanagement.databinding.ItemUserDetailsBinding
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.AddStaffRequest
 import com.skd.pgmanagement.networks.dataModel.StaffData
+import com.skd.pgmanagement.utils.EmailValidation
 import com.skd.pgmanagement.utils.showToast
 import com.skd.pgmanagement.views.BaseFragment
 import kotlinx.coroutines.Dispatchers
@@ -100,9 +101,14 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                                     .error(R.drawable.ic_launcher_background)
                                                     .into(binding.photoImageView)
                                             }
+                                            else {
+                                                EmailValidation.setImageForName(item.name, binding.photoImageView)
+                                            }
                                         } catch (e: IllegalArgumentException) {
-//                                            EmailValidation.setImageForName(item.name, binding.photoImageView)
+                                            EmailValidation.setImageForName(item.name, binding.photoImageView)
                                         }
+                                    }else {
+                                        EmailValidation.setImageForName(item.name, binding.photoImageView)
                                     }
                                 },
                                 inflater = { inflater, parent, _ ->
