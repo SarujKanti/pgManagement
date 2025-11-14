@@ -6,7 +6,7 @@
 
     <!-- Blue circle background -->
     <path
-        android:fillColor="#7D98BD"
+        android:fillColor="@color/bg_alpha_letter"
         android:pathData="M16 0A16 16 0 1 0 16 32 16 16 0 1 0 16 0z" />
 
     <!-- White letter (scaled + centered manually) -->
@@ -16,7 +16,7 @@
         android:translateX="8"
         android:translateY="7">
         <path
-            android:fillColor="#101010"
+            android:fillColor="@color/bg_alpha_letter_word"
             android:pathData="M2.5 0l2.05 3.47h0.08L6.7 0h2.43l-3.1 5.1 3.17 5.08H6.72L4.63 6.71H4.55l-2.08 3.47H0L3.19 5.1 0.06 0H2.5Z"/>
     </group>
 </vector>
