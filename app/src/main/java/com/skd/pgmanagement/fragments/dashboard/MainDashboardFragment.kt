@@ -5,6 +5,7 @@ import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Base64
 import android.view.*
 import android.widget.TextView
 import androidx.core.view.isVisible
@@ -14,11 +15,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.imageview.ShapeableImageView
+import com.skd.pgmanagement.activities.MainDashboardScreen
+import com.skd.pgmanagement.activities.staffRegister.StaffRegisterActivity
+import com.skd.pgmanagement.adapters.GenericAdapter
 import com.skd.pgmanagement.adapters.HomeCategoryAdapter
 import com.skd.pgmanagement.constants.StringConstants
 import com.skd.pgmanagement.databinding.CommonFragmentBinding
+import com.skd.pgmanagement.databinding.ItemGalleryImagesBinding
+import com.skd.pgmanagement.databinding.ItemUserDetailsBinding
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.ActivityData
+import com.skd.pgmanagement.utils.EmailValidation
 import com.skd.pgmanagement.utils.showToast
 import com.skd.pgmanagement.views.BaseFragment
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +41,7 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
     private var profileName: String? = null
     private var decodedImageUrl: String? = null
 
+    private fun containerActivity() = (activity as MainDashboardScreen)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,9 +76,11 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         lifecycleScope.launch {
             val homeJob = launch { loadHomeData() }
             val profileJob = launch { loadProfileData() }
+            val galleryJob = launch { getGalleryData() }
 
             homeJob.join()
             profileJob.join()
+            galleryJob.join()
         }
     }
 
@@ -132,6 +142,73 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
 
             } catch (e: Exception) {
                 requireContext().showToast("Failed: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private suspend fun getGalleryData(){
+        groupId?.let { id ->
+            try {
+                val response = withContext(Dispatchers.IO){
+                    RetrofitClient.getGalleryApiService(requireContext()).getGalleryPosts(id,1)
+                }
+                withContext(Dispatchers.Main) {
+                    containerActivity().dismissProgressBar()
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val data = response.body()?.data
+
+                        if (data.isNullOrEmpty()) {
+                            binding.recyclerView.adapter = null
+                            binding.txtEmpty.isVisible = true
+                        }
+                        else {
+                            binding.txtEmpty.isVisible = false
+
+                            val adapter = GenericAdapter(
+                                data = data.toMutableList(),
+                                bind = { binding, item, _ ->
+
+                                    val galleryBinding = binding as ItemGalleryImagesBinding
+
+                                    // Decode Base64 image URL
+                                    val decodedUrl = try {
+                                        val decodedBytes = Base64.decode(
+                                            item.fileName.first(),
+                                            Base64.DEFAULT
+                                        )
+                                        String(decodedBytes)
+                                    } catch (e: Exception) {
+                                        ""
+                                    }
+
+                                    // Load into ImageView
+                                    Glide.with(galleryBinding.imageViewBanner.context)
+                                        .load(decodedUrl)
+                                        .placeholder(R.drawable.ic_launcher_background)
+                                        .into(galleryBinding.imageViewBanner)
+                                },
+                                inflater = { inflater, parent, _ ->
+                                    ItemGalleryImagesBinding.inflate(inflater, parent, false)
+                                }
+                            )
+
+                            binding.recyclerView.layoutManager =
+                                LinearLayoutManager(binding.recyclerView.context)
+                            binding.recyclerView.adapter = adapter
+                        }
+
+                    } else {
+                        requireContext().showToast(
+                            "${getString(R.string.txt_error)}: ${response.message()}"
+                        )
+                    }
+                }
+            }catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    containerActivity().dismissProgressBar()
+                    requireContext().showToast("${getString(R.string.txt_failure)}: ${e.localizedMessage}")
+                }
             }
         }
     }

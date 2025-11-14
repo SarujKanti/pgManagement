@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.skd.pgmanagement.constants.Constants
 import com.skd.pgmanagement.constants.StringConstants
 import com.skd.pgmanagement.networks.dataModel.AddStaffApi
+import com.skd.pgmanagement.networks.dataModel.GalleryGetApi
 import com.skd.pgmanagement.networks.dataModel.GetAllStaffApi
 import com.skd.pgmanagement.networks.dataModel.GetHomeApi
 import com.skd.pgmanagement.networks.dataModel.GetKidSProfile
@@ -77,5 +78,9 @@ object RetrofitClient {
 
     fun addStaffApiService(context: Context): AddStaffApi {
         return getRetrofit(context).create(AddStaffApi::class.java)
+    }
+
+    fun getGalleryApiService(context: Context): GalleryGetApi {
+        return getRetrofit(context).create(GalleryGetApi::class.java)
     }
 }
