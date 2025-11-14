@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+
+    <!-- Blue circle background -->
+    <path
+        android:fillColor="#7D98BD"
+        android:pathData="M16 0A16 16 0 1 0 16 32 16 16 0 1 0 16 0z" />
+
+    <!-- White letter (scaled + centered manually) -->
+    <group
+        android:scaleX="1.8"
+        android:scaleY="1.8"
+        android:translateX="10"
+        android:translateY="7">
+        <path
+            android:fillColor="#101010"
+            android:pathData="M0 10.18V0h6.74v1.77H2.15V4.2H6.3v1.78H2.15v4.2H0Z"/>
+    </group>
+</vector>
