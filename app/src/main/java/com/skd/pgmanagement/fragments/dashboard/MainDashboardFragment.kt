@@ -1,7 +1,11 @@
 package com.skd.pgmanagement.fragments.dashboard
 
-import com.skd.pgmanagement.R
+import android.app.AlertDialog
 import android.app.Dialog
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -15,22 +19,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.imageview.ShapeableImageView
+import com.skd.pgmanagement.R
 import com.skd.pgmanagement.activities.MainDashboardScreen
-import com.skd.pgmanagement.activities.staffRegister.StaffRegisterActivity
+import com.skd.pgmanagement.activities.loginPage.LoginActivity
 import com.skd.pgmanagement.adapters.GenericAdapter
 import com.skd.pgmanagement.adapters.HomeCategoryAdapter
 import com.skd.pgmanagement.constants.StringConstants
 import com.skd.pgmanagement.databinding.CommonFragmentBinding
 import com.skd.pgmanagement.databinding.ItemGalleryImagesBinding
-import com.skd.pgmanagement.databinding.ItemUserDetailsBinding
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.ActivityData
-import com.skd.pgmanagement.utils.EmailValidation
+import com.skd.pgmanagement.networks.dataModel.AlbumData
 import com.skd.pgmanagement.utils.showToast
 import com.skd.pgmanagement.views.BaseFragment
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.common_fragment) {
 
@@ -41,11 +43,14 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
     private var profileName: String? = null
     private var decodedImageUrl: String? = null
 
+    private lateinit var sharedPreferences: SharedPreferences
+
     private fun containerActivity() = (activity as MainDashboardScreen)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         groupId = arguments?.getString(StringConstants.GROUP_ID)
+        sharedPreferences = requireContext().getSharedPreferences(StringConstants.SHARED_PREFERENCE, Context.MODE_PRIVATE)
     }
 
     override fun onCreateView(
@@ -53,182 +58,208 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         savedInstanceState: Bundle?
     ): View {
         binding = CommonFragmentBinding.inflate(inflater, container, false)
-        return binding!!.root
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.appBar.isVisible=true
+        binding.appBar.isVisible = true
+
+        containerActivity().showProgressBar()
         initToolbar()
         loadDashboardData()
+        setupLogoutDialog()
     }
 
-    /** Toolbar Action */
+     /**Toolbar*/
     private fun initToolbar() {
-        binding?.ivMore?.setOnClickListener {
-            homeDataList?.let {
-                showPartialFullscreenDialog(it, profileName)
+        binding.ivMore.setOnClickListener {
+            homeDataList?.let { list ->
+                showPartialFullscreenDialog(list, profileName)
             } ?: requireContext().showToast(getString(R.string.data_not_loaded))
         }
     }
 
-    /**  Load Home & Profile Data */
+    /**Load all dashboard data IN PARALLEL using async/await*/
     private fun loadDashboardData() {
         lifecycleScope.launch {
-            val homeJob = launch { loadHomeData() }
-            val profileJob = launch { loadProfileData() }
-            val galleryJob = launch { getGalleryData() }
+            try {
+                val homeDeferred = async { loadHomeData() }
+                val profileDeferred = async { loadProfileData() }
+                val galleryDeferred = async { loadGalleryData() }
 
-            homeJob.join()
-            profileJob.join()
-            galleryJob.join()
+                homeDeferred.await()
+                profileDeferred.await()
+                galleryDeferred.await()
+
+            } catch (e: Exception) {
+                requireContext().showToast("${getString(R.string.txt_error)}: ${e.localizedMessage}")
+            } finally {
+                containerActivity().dismissProgressBar()
+            }
         }
     }
 
-    /** Home API Call */
-    private suspend fun loadHomeData() {
-        groupId?.let { id ->
+    /**     Home API*/
+    private suspend fun loadHomeData() = withContext(Dispatchers.IO) {
+        val id = groupId ?: return@withContext
+
+        val response = RetrofitClient.homeApiService(requireContext()).getHomeGroupsSuspend(id)
+
+        if (response.isSuccessful && response.body() != null) {
+
+            homeDataList = response.body()?.data?.map { activity ->
+                val allowedTypes = listOf(
+                    StringConstants.SUBJECT_REGISTER,
+                    StringConstants.STAFF_REGISTER,
+                    StringConstants.FEED_BACK,
+                    StringConstants.GALLERY,
+                    StringConstants.HOSTEL,
+                    StringConstants.MESSAGE,
+                    StringConstants.NOTICE_BOARD
+                )
+
+                val filteredIcons = activity.featureIcons.filter { it.type in allowedTypes }
+
+                activity.copy(featureIcons = filteredIcons)
+            }
+
+        } else {
+            withContext(Dispatchers.Main) {
+                requireContext().showToast("Error: ${response.message()}")
+            }
+        }
+    }
+
+    /**     Profile API */
+    private suspend fun loadProfileData() = withContext(Dispatchers.IO) {
+        val id = groupId ?: return@withContext
+        val response =
+            RetrofitClient.profileApiService(requireContext()).getKidSProfileSuspend(id)
+
+        val profile = response.body()?.data?.firstOrNull() ?: return@withContext
+
+        profileName = profile.name
+
+        profile.image?.let {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    RetrofitClient.homeApiService(requireContext()).getHomeGroupsSuspend(id)
+                val decodedString = String(Base64.decode(it, Base64.DEFAULT))
+                if (decodedString.startsWith("http") && !decodedString.contains("undefined")) {
+                    decodedImageUrl = decodedString
                 }
+            } catch (_: Exception) {}
+        }
+    }
 
-                if (response.isSuccessful && response.body() != null) {
-                    val originalData = response.body()?.data
+    /** Gallery API*/
+    private suspend fun loadGalleryData() = withContext(Dispatchers.IO) {
+        val id = groupId ?: return@withContext
+        val response = RetrofitClient.getGalleryApiService(requireContext()).getGalleryPosts(id, 1)
 
-                    homeDataList = originalData?.map { activity ->
-                        val filteredIcons = activity.featureIcons.filter { feature ->
-                            feature.type == StringConstants.SUBJECT_REGISTER ||
-                                    feature.type == StringConstants.STAFF_REGISTER ||
-                                    feature.type == StringConstants.FEED_BACK ||
-                                    feature.type == StringConstants.GALLERY ||
-                                    feature.type == StringConstants.HOSTEL ||
-                                    feature.type == StringConstants.MESSAGE ||
-                                    feature.type == StringConstants.NOTICE_BOARD
-                        }
-                        activity.copy(featureIcons = filteredIcons)
-                    }
+        withContext(Dispatchers.Main) {
 
+            if (response.isSuccessful && response.body() != null) {
+                val data = response.body()?.data ?: emptyList()
+
+                if (data.isEmpty()) {
+                    binding.recyclerView.adapter = null
+                    binding.txtEmpty.isVisible = true
                 } else {
-                    requireContext().showToast("Error: ${response.message()}")
+                    binding.txtEmpty.isVisible = false
+                    setupGalleryAdapter(data)
                 }
 
-            } catch (e: Exception) {
-                requireContext().showToast("Failure: ${e.localizedMessage}")
+            } else {
+                requireContext().showToast("Error: ${response.message()}")
             }
         }
     }
 
-    /** Profile API Call */
-    private suspend fun loadProfileData() {
-        groupId?.let { id ->
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    RetrofitClient.profileApiService(requireContext()).getKidSProfileSuspend(id)
+    private fun setupGalleryAdapter(data: List<AlbumData>) {
+        val allImages = mutableListOf<String>()
+
+        data.forEach { album ->
+            album.fileName.forEach { encoded ->
+                val decodedUrl = try {
+                    String(Base64.decode(encoded, Base64.DEFAULT))
+                } catch (e: Exception) {
+                    ""
                 }
+                allImages.add(decodedUrl)
+            }
+        }
+        val adapter = GenericAdapter(
+            data = allImages,
+            bind = { binding, imageUrl, position ->
 
-                val firstItem = response.body()?.data?.firstOrNull()
-                if (firstItem != null) {
-                    profileName = firstItem.name
+                val galleryBinding = binding as ItemGalleryImagesBinding
+                val cardView = galleryBinding.cvItemView
 
-                    if (!firstItem.image.isNullOrEmpty()) {
-                        val decodedBytes = android.util.Base64.decode(firstItem.image, android.util.Base64.DEFAULT)
-                        val decodedString = String(decodedBytes)
+                val screenWidth = Resources.getSystem().displayMetrics.widthPixels
+                val layoutParams = cardView.layoutParams
 
-                        if (decodedString.startsWith("http") && !decodedString.contains("undefined")) {
-                            decodedImageUrl = decodedString
-                        }
+                val lastIndex = allImages.size - 1
+
+                val eightyPercent = (screenWidth * 0.80).toInt()
+                val twentyPercent = (screenWidth * 0.20).toInt()
+                val tenPercent = (screenWidth * 0.10).toInt()
+
+                when (position) {
+
+                    0 -> {
+                        // 0th → 80%
+                        layoutParams.width = eightyPercent
+                    }
+
+                    lastIndex -> {
+                        // Last item → 80%
+                        layoutParams.width = eightyPercent
+                    }
+
+                    else -> {
+                        // Middle Items → 80%
+                        layoutParams.width = eightyPercent
                     }
                 }
 
-            } catch (e: Exception) {
-                requireContext().showToast("Failed: ${e.localizedMessage}")
+                // Apply layout
+                cardView.layoutParams = layoutParams
+
+                // Load image
+                Glide.with(galleryBinding.imageViewBanner.context)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .into(galleryBinding.imageViewBanner)
+            },
+            inflater = { inflater, parent, _ ->
+                ItemGalleryImagesBinding.inflate(inflater, parent, false)
             }
-        }
+        )
+
+        binding.recyclerView.layoutManager =
+            LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+
+        binding.recyclerView.adapter = adapter
     }
 
-    private suspend fun getGalleryData(){
-        groupId?.let { id ->
-            try {
-                val response = withContext(Dispatchers.IO){
-                    RetrofitClient.getGalleryApiService(requireContext()).getGalleryPosts(id,1)
-                }
-                withContext(Dispatchers.Main) {
-                    containerActivity().dismissProgressBar()
 
-                    if (response.isSuccessful && response.body() != null) {
-                        val data = response.body()?.data
-
-                        if (data.isNullOrEmpty()) {
-                            binding.recyclerView.adapter = null
-                            binding.txtEmpty.isVisible = true
-                        }
-                        else {
-                            binding.txtEmpty.isVisible = false
-
-                            val adapter = GenericAdapter(
-                                data = data.toMutableList(),
-                                bind = { binding, item, _ ->
-
-                                    val galleryBinding = binding as ItemGalleryImagesBinding
-
-                                    // Decode Base64 image URL
-                                    val decodedUrl = try {
-                                        val decodedBytes = Base64.decode(
-                                            item.fileName.first(),
-                                            Base64.DEFAULT
-                                        )
-                                        String(decodedBytes)
-                                    } catch (e: Exception) {
-                                        ""
-                                    }
-
-                                    // Load into ImageView
-                                    Glide.with(galleryBinding.imageViewBanner.context)
-                                        .load(decodedUrl)
-                                        .placeholder(R.drawable.ic_launcher_background)
-                                        .into(galleryBinding.imageViewBanner)
-                                },
-                                inflater = { inflater, parent, _ ->
-                                    ItemGalleryImagesBinding.inflate(inflater, parent, false)
-                                }
-                            )
-
-                            binding.recyclerView.layoutManager =
-                                LinearLayoutManager(binding.recyclerView.context)
-                            binding.recyclerView.adapter = adapter
-                        }
-
-                    } else {
-                        requireContext().showToast(
-                            "${getString(R.string.txt_error)}: ${response.message()}"
-                        )
-                    }
-                }
-            }catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    containerActivity().dismissProgressBar()
-                    requireContext().showToast("${getString(R.string.txt_failure)}: ${e.localizedMessage}")
-                }
-            }
-        }
-    }
-
-    /** Side Menu Dialog */
+    /** Left Side Drawer*/
     private fun showPartialFullscreenDialog(list: List<ActivityData>, userName: String?) {
+
         val dialog = Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_fullscreen_partial)
         dialog.window?.apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setLayout((resources.displayMetrics.widthPixels * 0.7).toInt(), WindowManager.LayoutParams.MATCH_PARENT)
+            setLayout((resources.displayMetrics.widthPixels * 0.7).toInt(),
+                WindowManager.LayoutParams.MATCH_PARENT)
             setGravity(Gravity.START)
         }
 
-        dialog.findViewById<TextView>(R.id.tvDialogContent).text = userName ?: ""
+        dialog.findViewById<TextView>(R.id.tvDialogContent).text = userName.orEmpty()
 
-        val img = dialog.findViewById<ShapeableImageView>(R.id.leftImageView)
+        val profileImg = dialog.findViewById<ShapeableImageView>(R.id.leftImageView)
         decodedImageUrl?.let {
-            Glide.with(requireContext()).load(it).into(img)
+            Glide.with(requireContext()).load(it).into(profileImg)
         }
 
         val recyclerView = dialog.findViewById<RecyclerView>(R.id.recyclerViewCategories)
@@ -237,4 +268,36 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
 
         dialog.show()
     }
+
+
+    /**     Logout*/
+    private fun setupLogoutDialog() {
+
+        binding.ivDelete.setOnClickListener {
+
+            AlertDialog.Builder(requireContext()).apply {
+                setTitle(getString(R.string.txt_Logout))
+                setMessage(getString(R.string.txt_sure_logout))
+                setPositiveButton(getString(R.string.txt_ok)) { dialog, _ ->
+
+                    sharedPreferences.edit().clear().apply()
+                    requireContext().showToast(getString(R.string.txt_success_logout))
+                    dialog.dismiss()
+
+                    val intent = Intent(requireContext(), LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    requireActivity().finish()
+                }
+
+                setNegativeButton(getString(R.string.txt_Cancel)) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                show()
+            }
+        }
+    }
+
 }

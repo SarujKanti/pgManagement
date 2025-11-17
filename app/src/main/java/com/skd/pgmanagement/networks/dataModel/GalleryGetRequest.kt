@@ -15,8 +15,8 @@ data class GalleryGetRequest(
 data class AlbumData(
     val updatedAt: String,
     val groupId: String,
-    val fileType: String?,       // null in your JSON
-    val fileName: List<String>,  // array of Base64 URLs
+    val fileType: String?,
+    val fileName: List<String>,
     val description: String,
     val createdAt: String,
     val canEdit: Boolean,
