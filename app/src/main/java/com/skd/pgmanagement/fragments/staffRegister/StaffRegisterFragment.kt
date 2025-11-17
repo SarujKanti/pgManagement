@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.textfield.TextInputEditText
 import com.skd.pgmanagement.R
 import com.skd.pgmanagement.activities.staffRegister.StaffRegisterActivity
@@ -28,6 +30,8 @@ import com.skd.pgmanagement.databinding.ItemUserDetailsBinding
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.AddStaffRequest
 import com.skd.pgmanagement.networks.dataModel.StaffData
+import com.skd.pgmanagement.networks.dataModel.StaffUserDetails
+import com.skd.pgmanagement.networks.dataModel.StaffUserDetailsResponse
 import com.skd.pgmanagement.utils.EmailValidation
 import com.skd.pgmanagement.utils.showToast
 import com.skd.pgmanagement.views.BaseFragment
@@ -90,6 +94,10 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                         text = item.designation.orEmpty()
                                         visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
                                     }
+                                    binding.tvDoj.apply {
+                                        text = item.doj.orEmpty()
+                                        visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
+                                    }
                                     if (!item.image.isNullOrEmpty()) {
                                         try {
                                             val decodedBytes = Base64.decode(item.image, Base64.DEFAULT)
@@ -109,6 +117,11 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                         }
                                     }else {
                                         EmailValidation.setImageForName(item.name, binding.photoImageView)
+                                    }
+                                    binding.root.setOnClickListener {
+//                                        showStaffDetailDialog(item)
+                                        val staffId = item.staffId
+                                        fetchStaffDetails(staffId)
                                     }
                                 },
                                 inflater = { inflater, parent, _ ->
@@ -133,6 +146,84 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
             }
         }
     }
+
+    private fun fetchStaffDetails(staffId: String) {
+        // Inflate dialog layout immediately
+        val dialogView = layoutInflater.inflate(R.layout.dialog_edit_details, null)
+        val nameTextView = dialogView.findViewById<TextView>(R.id.studentName)
+        val emailTextView = dialogView.findViewById<TextView>(R.id.designation)
+        val imageView = dialogView.findViewById<ImageView>(R.id.profileImageView)
+
+        // Set placeholder/default values
+        nameTextView.text = "Loading..."
+        emailTextView.text = ""
+        imageView.setImageResource(R.drawable.ic_launcher_background)
+
+        // Create and show the dialog immediately
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        dialog.show()
+        // Optional: make width match parent
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        // Now call API to fetch actual data
+        groupId?.let { gId ->
+            containerActivity().showProgressBar()
+
+            RetrofitClient.getStaffDetailsApiService(requireContext())
+                .getStaffDetails(gId, staffId, "staff")
+                .enqueue(object : retrofit2.Callback<StaffUserDetailsResponse> {
+                    override fun onResponse(
+                        call: retrofit2.Call<StaffUserDetailsResponse>,
+                        response: retrofit2.Response<StaffUserDetailsResponse>
+                    ) {
+                        containerActivity().dismissProgressBar()
+                        val data = response.body()?.data
+                        if (response.isSuccessful && data != null) {
+                            // Populate dialog views
+                            nameTextView.text = data.name ?: "N/A"
+                            emailTextView.text = data.designation ?: "N/A"
+
+                            data.image?.let { encodedImage ->
+                                try {
+                                    val decodedBytes = Base64.decode(encodedImage, Base64.DEFAULT)
+                                    val decodedUrl = String(decodedBytes)
+                                    if (decodedUrl.startsWith("http")) {
+                                        Glide.with(imageView.context)
+                                            .load(decodedUrl)
+                                            .placeholder(R.drawable.ic_launcher_background)
+                                            .into(imageView)
+                                    } else {
+                                        imageView.setImageResource(R.drawable.ic_launcher_background)
+                                    }
+                                } catch (e: Exception) {
+                                    imageView.setImageResource(R.drawable.ic_launcher_background)
+                                }
+                            }
+                        } else {
+                            requireContext().showToast("Staff details not found")
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: retrofit2.Call<StaffUserDetailsResponse>,
+                        t: Throwable
+                    ) {
+                        containerActivity().dismissProgressBar()
+                        requireContext().showToast("Failed to fetch details: ${t.localizedMessage}")
+                    }
+                })
+        }
+    }
+
+
+
+
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_all, menu)
