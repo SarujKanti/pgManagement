@@ -6,9 +6,8 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_marginHorizontal="@dimen/_10sdp"
-    android:layout_marginVertical="@dimen/_3sdp"
-    app:cardCornerRadius="@dimen/padding_10dp"
-    app:cardElevation="6dp"
+    android:layout_marginVertical="@dimen/_1sdp"
+    app:cardCornerRadius="@dimen/_7sdp"
     android:layout_height="wrap_content">
 
     <LinearLayout
@@ -46,14 +45,32 @@
                 android:textColor="@color/black"
                 android:textSize="@dimen/_15ssp"
                 android:textStyle="bold" />
-            <TextView
-                android:id="@+id/designationTextView"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Software Engineer"
-                android:gravity="start|center"
-                android:textSize="@dimen/_14ssp"
-                android:textColor="#757575" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/designationTextView"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Software Engineer"
+                    android:gravity="start|center_vertical"
+                    android:textSize="@dimen/_14ssp"
+                    android:textColor="#757575" />
+
+                <TextView
+                    android:id="@+id/tvDoj"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="01-01-2020"
+                    android:gravity="end|center_vertical"
+                    android:textSize="@dimen/_14ssp"
+                    android:textColor="#757575" />
+            </LinearLayout>
+
+
         </LinearLayout>
 
     </LinearLayout>
