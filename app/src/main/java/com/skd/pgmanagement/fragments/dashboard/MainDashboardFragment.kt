@@ -235,6 +235,7 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
             }
         )
 
+
         binding.recyclerView.layoutManager =
             LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
 
@@ -268,7 +269,6 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
 
         dialog.show()
     }
-
 
     /**     Logout*/
     private fun setupLogoutDialog() {
