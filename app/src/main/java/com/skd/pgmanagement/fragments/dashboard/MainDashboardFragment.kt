@@ -175,6 +175,7 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
     }
 
     private fun setupGalleryAdapter(data: List<AlbumData>) {
+
         val allImages = mutableListOf<String>()
 
         data.forEach { album ->
@@ -187,6 +188,7 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                 allImages.add(decodedUrl)
             }
         }
+
         val adapter = GenericAdapter(
             data = allImages,
             bind = { binding, imageUrl, position ->
@@ -197,34 +199,10 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                 val screenWidth = Resources.getSystem().displayMetrics.widthPixels
                 val layoutParams = cardView.layoutParams
 
-                val lastIndex = allImages.size - 1
-
                 val eightyPercent = (screenWidth * 0.80).toInt()
-                val twentyPercent = (screenWidth * 0.20).toInt()
-                val tenPercent = (screenWidth * 0.10).toInt()
-
-                when (position) {
-
-                    0 -> {
-                        // 0th → 80%
-                        layoutParams.width = eightyPercent
-                    }
-
-                    lastIndex -> {
-                        // Last item → 80%
-                        layoutParams.width = eightyPercent
-                    }
-
-                    else -> {
-                        // Middle Items → 80%
-                        layoutParams.width = eightyPercent
-                    }
-                }
-
-                // Apply layout
+                layoutParams.width = eightyPercent
                 cardView.layoutParams = layoutParams
 
-                // Load image
                 Glide.with(galleryBinding.imageViewBanner.context)
                     .load(imageUrl)
                     .placeholder(R.drawable.ic_launcher_background)
@@ -235,12 +213,21 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
             }
         )
 
-
-        binding.recyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
 
         binding.recyclerView.adapter = adapter
+        var currentIndex = 0
+        lifecycleScope.launch {
+            delay(1000)
+            while (true) {
+                delay(2000)
+                val lastIndex = allImages.size - 1
+                currentIndex = if (currentIndex >= lastIndex) 0 else currentIndex + 1
+                binding.recyclerView.smoothScrollToPosition(currentIndex)
+            }
+        }
     }
+
 
 
     /** Left Side Drawer*/
