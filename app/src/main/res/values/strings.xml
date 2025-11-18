@@ -28,5 +28,13 @@
     <string name="fill_all_details">Please fill all fields</string>
     <string name="failed_to_add">Failed to add staff</string>
     <string name="txt_image">Images</string>
+    <string name="txt_doj">Doj:</string>
+    <string name="unable_to_open_phone">Unable to open dialer</string>
+    <string name="whatsapp_not_installed">WhatsApp not installed on this device</string>
+    <string name="unable_to_open_message">Unable to open Messages app</string>
+    <string name="package_whatsapp">com.whatsapp</string>
+    <string name="text_tel">tel:</string>
+    <string name="text_sms">smsto:</string>
+    <string name="whatsapp_device">whatsapp://send?phone=</string>
 
 </resources>

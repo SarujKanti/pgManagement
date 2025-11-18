@@ -1,5 +1,7 @@
 package com.skd.pgmanagement.fragments.staffRegister
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -95,7 +97,7 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                         visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
                                     }
                                     binding.tvDoj.apply {
-                                        text = item.doj.orEmpty()
+                                        text = getString(R.string.txt_doj) +"\t"+ item.doj.orEmpty()
                                         visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
                                     }
                                     if (!item.image.isNullOrEmpty()) {
@@ -117,6 +119,15 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                         }
                                     }else {
                                         EmailValidation.setImageForName(item.name, binding.photoImageView)
+                                    }
+                                    binding.ivCall.setOnClickListener {
+                                        openDialer(item.phone)
+                                    }
+                                    binding.ivWhatsapp.setOnClickListener {
+                                        openWhatsApp(item.phone)
+                                    }
+                                    binding.ivMessage.setOnClickListener {
+                                        openSmsApp(item.phone)
                                     }
                                     binding.root.setOnClickListener {
 //                                        showStaffDetailDialog(item)
@@ -147,82 +158,130 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         }
     }
 
+    private fun openDialer(phoneNumber: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DIAL)
+            intent.data = Uri.parse("${getString(R.string.text_tel)} $phoneNumber")
+            startActivity(intent)
+        } catch (e: Exception) {
+            requireContext().showToast(getString(R.string.unable_to_open_phone))
+        }
+    }
+
+    private fun openWhatsApp(phoneNumber: String) {
+        try {
+            val formatted = phoneNumber.trim()
+
+            val uri = Uri.parse("${getString(R.string.whatsapp_device)} $formatted")
+
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            intent.setPackage(getString(R.string.package_whatsapp))
+
+            startActivity(intent)
+
+        } catch (e: Exception) {
+            requireContext().showToast(getString(R.string.whatsapp_not_installed))
+        }
+    }
+
+
+    private fun openSmsApp(phoneNumber: String) {
+        try {
+            val intent = Intent(Intent.ACTION_SENDTO)
+            intent.data = Uri.parse("${getString(R.string.text_sms)} $phoneNumber") // Direct SMS
+            startActivity(intent)
+        } catch (e: Exception) {
+            requireContext().showToast(getString(R.string.unable_to_open_message))
+        }
+    }
+
+
     private fun fetchStaffDetails(staffId: String) {
-        // Inflate dialog layout immediately
+
+        // Inflate bottom sheet layout
         val dialogView = layoutInflater.inflate(R.layout.dialog_edit_details, null)
         val nameTextView = dialogView.findViewById<TextView>(R.id.studentName)
         val emailTextView = dialogView.findViewById<TextView>(R.id.designation)
         val imageView = dialogView.findViewById<ImageView>(R.id.profileImageView)
 
-        // Set placeholder/default values
+        val staffName = dialogView.findViewById<TextView>(R.id.etNameInput)
+        val phoneNumber = dialogView.findViewById<TextView>(R.id.etPhoneNumber)
+        val designation = dialogView.findViewById<TextView>(R.id.etDesignation)
+        val profession = dialogView.findViewById<TextView>(R.id.etProfession)
+
+        // Set loading defaults
         nameTextView.text = "Loading..."
         emailTextView.text = ""
         imageView.setImageResource(R.drawable.ic_launcher_background)
 
-        // Create and show the dialog immediately
-        val dialog = android.app.AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .create()
+        // Create BottomSheetDialog
+        val bottomSheetDialog = BottomSheetDialog(requireContext())
+        bottomSheetDialog.setContentView(dialogView)
+        bottomSheetDialog.setCanceledOnTouchOutside(true)
+        bottomSheetDialog.show()
 
-        dialog.show()
-        // Optional: make width match parent
-        dialog.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        // Optional: expand full height
+        bottomSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
 
-        // Now call API to fetch actual data
+        // Call API
         groupId?.let { gId ->
             containerActivity().showProgressBar()
 
             RetrofitClient.getStaffDetailsApiService(requireContext())
                 .getStaffDetails(gId, staffId, "staff")
                 .enqueue(object : retrofit2.Callback<StaffUserDetailsResponse> {
+
                     override fun onResponse(
                         call: retrofit2.Call<StaffUserDetailsResponse>,
                         response: retrofit2.Response<StaffUserDetailsResponse>
                     ) {
                         containerActivity().dismissProgressBar()
                         val data = response.body()?.data
+
                         if (response.isSuccessful && data != null) {
-                            // Populate dialog views
+
                             nameTextView.text = data.name ?: "N/A"
                             emailTextView.text = data.designation ?: "N/A"
+                            staffName.text = data.name ?: "N/A"
+                            phoneNumber.text = data.phone ?: "N/A"
+                            designation.text = data.designation ?: "N/A"
+                            profession.text = data.doj ?: "N/A"
 
-                            data.image?.let { encodedImage ->
+                            // Load Image
+                            if (!data.image.isNullOrEmpty()) {
                                 try {
-                                    val decodedBytes = Base64.decode(encodedImage, Base64.DEFAULT)
-                                    val decodedUrl = String(decodedBytes)
-                                    if (decodedUrl.startsWith("http")) {
+                                    val decodedBytes = Base64.decode(data.image, Base64.DEFAULT)
+                                    val decodedImageUrl = String(decodedBytes)
+
+                                    if (decodedImageUrl.startsWith("http") && !decodedImageUrl.contains("undefined")) {
                                         Glide.with(imageView.context)
-                                            .load(decodedUrl)
+                                            .load(decodedImageUrl)
                                             .placeholder(R.drawable.ic_launcher_background)
+                                            .error(R.drawable.ic_launcher_background)
                                             .into(imageView)
                                     } else {
-                                        imageView.setImageResource(R.drawable.ic_launcher_background)
+                                        data.name?.let { EmailValidation.setImageForName(it, imageView) }
                                     }
+
                                 } catch (e: Exception) {
-                                    imageView.setImageResource(R.drawable.ic_launcher_background)
+                                    data.name?.let { EmailValidation.setImageForName(it, imageView) }
                                 }
+                            } else {
+                                data.name?.let { EmailValidation.setImageForName(it, imageView) }
                             }
+
                         } else {
                             requireContext().showToast("Staff details not found")
                         }
                     }
 
-                    override fun onFailure(
-                        call: retrofit2.Call<StaffUserDetailsResponse>,
-                        t: Throwable
-                    ) {
+                    override fun onFailure(call: retrofit2.Call<StaffUserDetailsResponse>, t: Throwable) {
                         containerActivity().dismissProgressBar()
-                        requireContext().showToast("Failed to fetch details: ${t.localizedMessage}")
+                        requireContext().showToast("Failed to fetch: ${t.localizedMessage}")
                     }
                 })
         }
     }
-
-
-
 
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
