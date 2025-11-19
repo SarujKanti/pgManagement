@@ -77,4 +77,5 @@
 
     <color name="bg_alpha_letter">#7D98BD</color>
     <color name="bg_alpha_letter_word">#101010</color>
+    <color name="little_gray">#F5F5F5</color>
 </resources>

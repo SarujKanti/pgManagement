@@ -36,5 +36,8 @@
     <string name="text_tel">tel:</string>
     <string name="text_sms">smsto:</string>
     <string name="whatsapp_device">whatsapp://send?phone=</string>
+    <string name="txt_add_more">+Add More</string>
+    <string name="total_staff">Total Staff</string>
+    <string name="total_tenant">Total Tenant</string>
 
 </resources>
