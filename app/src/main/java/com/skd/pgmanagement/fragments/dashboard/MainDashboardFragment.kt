@@ -86,10 +86,12 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                 val homeDeferred = async { loadHomeData() }
                 val profileDeferred = async { loadProfileData() }
                 val galleryDeferred = async { loadGalleryData() }
+                val galleryDeferred2 = async { totalPeopleData() }
 
                 homeDeferred.await()
                 profileDeferred.await()
                 galleryDeferred.await()
+                galleryDeferred2.await()
 
             } catch (e: Exception) {
                 requireContext().showToast("${getString(R.string.txt_error)}: ${e.localizedMessage}")
@@ -159,14 +161,34 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
 
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()?.data ?: emptyList()
+                binding.recyclerView2nd.isVisible= true
+                binding.tvAddMore.isVisible= true
 
                 if (data.isEmpty()) {
-                    binding.recyclerView.adapter = null
+                    binding.recyclerView2nd.adapter = null
                     binding.txtEmpty.isVisible = true
                 } else {
                     binding.txtEmpty.isVisible = false
                     setupGalleryAdapter(data)
                 }
+
+            } else {
+                requireContext().showToast("Error: ${response.message()}")
+            }
+        }
+    }
+
+    private suspend fun totalPeopleData() = withContext(Dispatchers.IO) {
+        val id = groupId ?: return@withContext
+        val response = RetrofitClient.getTotalPeopleApiService(requireContext()).getTotalPeople(id)
+
+        withContext(Dispatchers.Main) {
+
+            if (response.isSuccessful && response.body() != null) {
+                val data = response.body()!!.data
+                binding.llCardDetails.isVisible= true
+                binding.tvStaffCount.text = data.totalNoOfStaffs.toString()
+                binding.tvStudentCount.text = data.totalNoOfClasses.toString()
 
             } else {
                 requireContext().showToast("Error: ${response.message()}")
@@ -213,9 +235,9 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
             }
         )
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+        binding.recyclerView2nd.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
 
-        binding.recyclerView.adapter = adapter
+        binding.recyclerView2nd.adapter = adapter
         var currentIndex = 0
         lifecycleScope.launch {
             delay(1000)
@@ -223,7 +245,7 @@ class MainDashboardFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                 delay(2000)
                 val lastIndex = allImages.size - 1
                 currentIndex = if (currentIndex >= lastIndex) 0 else currentIndex + 1
-                binding.recyclerView.smoothScrollToPosition(currentIndex)
+                binding.recyclerView2nd.smoothScrollToPosition(currentIndex)
             }
         }
     }

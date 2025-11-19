@@ -11,6 +11,7 @@ import com.skd.pgmanagement.networks.dataModel.GetHomeApi
 import com.skd.pgmanagement.networks.dataModel.GetKidSProfile
 import com.skd.pgmanagement.networks.dataModel.LoginApi
 import com.skd.pgmanagement.networks.dataModel.StaffDetailsApi
+import com.skd.pgmanagement.networks.dataModel.TotalPeopleApi
 import com.skd.pgmanagement.networks.dataModel.UserExist
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -87,5 +88,9 @@ object RetrofitClient {
 
     fun getStaffDetailsApiService(context: Context): StaffDetailsApi {
         return getRetrofit(context).create(StaffDetailsApi::class.java)
+    }
+
+    fun getTotalPeopleApiService(context: Context): TotalPeopleApi {
+        return getRetrofit(context).create(TotalPeopleApi::class.java)
     }
 }

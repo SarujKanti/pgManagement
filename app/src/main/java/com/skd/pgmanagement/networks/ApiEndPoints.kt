@@ -19,4 +19,5 @@ object ApiEndPoints {
     const val ADD_STAFF = "groups/{groupId}/multiple/staff/register"
     const val GET_STAFF_DETAILS = "groups/{groupId}/user/{userId}/profile/get"
     const val GET_GALLERY_ITEMS= "groups/{groupId}/gallery/get"
+    const val GET_PEOPLE_COUNT= "groups/{groupId}/attendance/report/get"
 }
