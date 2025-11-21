@@ -11,6 +11,7 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="@dimen/_60sdp"
+
             android:background="@color/btn_background"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
