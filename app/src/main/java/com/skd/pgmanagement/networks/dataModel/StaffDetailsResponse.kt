@@ -11,6 +11,7 @@ data class StaffUserDetailsResponse(
 )
 
 data class StaffUserDetails(
+    
     val image: String?,
     val dob: String?,
     val caste: String?,
