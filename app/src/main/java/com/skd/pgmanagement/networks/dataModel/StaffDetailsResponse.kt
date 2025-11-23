@@ -10,6 +10,7 @@ data class StaffUserDetailsResponse(
     val data: StaffUserDetails
 )
 
+
 data class StaffUserDetails(
     val image: String?,
     val dob: String?,
