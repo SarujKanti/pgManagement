@@ -4,24 +4,18 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.*
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.textfield.TextInputEditText
 import com.skd.pgmanagement.R
 import com.skd.pgmanagement.activities.staffRegister.StaffRegisterActivity
@@ -32,9 +26,9 @@ import com.skd.pgmanagement.databinding.ItemUserDetailsBinding
 import com.skd.pgmanagement.networks.RetrofitClient
 import com.skd.pgmanagement.networks.dataModel.AddStaffRequest
 import com.skd.pgmanagement.networks.dataModel.StaffData
-import com.skd.pgmanagement.networks.dataModel.StaffUserDetails
 import com.skd.pgmanagement.networks.dataModel.StaffUserDetailsResponse
 import com.skd.pgmanagement.utils.EmailValidation
+import com.skd.pgmanagement.utils.SwipeToDeleteCallback
 import com.skd.pgmanagement.utils.showToast
 import com.skd.pgmanagement.views.BaseFragment
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +36,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.common_fragment) {
+
     override lateinit var binding: CommonFragmentBinding
     private var groupId: String? = null
 
@@ -60,9 +55,8 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         setHasOptionsMenu(true)
         containerActivity().showProgressBar()
         getBundleData()
-        viewLifecycleOwner.lifecycleScope.launch {
-            getApiResponse()
-        }
+
+        viewLifecycleOwner.lifecycleScope.launch { getApiResponse() }
     }
 
     private fun getBundleData() {
@@ -96,41 +90,38 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                         text = item.designation.orEmpty()
                                         visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
                                     }
+
                                     binding.tvDoj.apply {
-                                        text = getString(R.string.txt_doj) +"\t"+ item.doj.orEmpty()
+                                        text = getString(R.string.txt_doj) + "\t" + item.doj.orEmpty()
                                         visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
                                     }
+
                                     if (!item.image.isNullOrEmpty()) {
                                         try {
                                             val decodedBytes = Base64.decode(item.image, Base64.DEFAULT)
                                             val decodedImageUrl = String(decodedBytes)
+
                                             if (decodedImageUrl.startsWith("http") && !decodedImageUrl.contains("undefined")) {
                                                 Glide.with(binding.photoImageView.context)
                                                     .load(decodedImageUrl)
                                                     .placeholder(R.drawable.ic_launcher_background)
                                                     .error(R.drawable.ic_launcher_background)
                                                     .into(binding.photoImageView)
-                                            }
-                                            else {
+                                            } else {
                                                 EmailValidation.setImageForName(item.name, binding.photoImageView)
                                             }
-                                        } catch (e: IllegalArgumentException) {
+                                        } catch (e: Exception) {
                                             EmailValidation.setImageForName(item.name, binding.photoImageView)
                                         }
-                                    }else {
+                                    } else {
                                         EmailValidation.setImageForName(item.name, binding.photoImageView)
                                     }
-                                    binding.ivCall.setOnClickListener {
-                                        openDialer(item.phone)
-                                    }
-                                    binding.ivWhatsapp.setOnClickListener {
-                                        openWhatsApp(item.phone)
-                                    }
-                                    binding.ivMessage.setOnClickListener {
-                                        openSmsApp(item.phone)
-                                    }
+
+                                    binding.ivCall.setOnClickListener { openDialer(item.phone) }
+                                    binding.ivWhatsapp.setOnClickListener { openWhatsApp(item.phone) }
+                                    binding.ivMessage.setOnClickListener { openSmsApp(item.phone) }
+
                                     binding.root.setOnClickListener {
-//                                        showStaffDetailDialog(item)
                                         val staffId = item.staffId
                                         fetchStaffDetails(staffId)
                                     }
@@ -140,8 +131,24 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                                 }
                             )
 
-                            binding.recyclerView.layoutManager = LinearLayoutManager(binding.recyclerView.context)
+                            binding.recyclerView.layoutManager =
+                                LinearLayoutManager(binding.recyclerView.context)
                             binding.recyclerView.adapter = adapter
+
+                            val swipeToDelete = object : SwipeToDeleteCallback(requireContext()) {
+                                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                                    val position = viewHolder.adapterPosition
+                                    val staffItem = adapter.data[position]
+
+//                                    deleteStaff(staffItem.staffId)
+
+                                    adapter.data.removeAt(position)
+                                    adapter.notifyItemRemoved(position)
+                                }
+                            }
+
+                            ItemTouchHelper(swipeToDelete)
+                                .attachToRecyclerView(binding.recyclerView)
                         }
                     } else {
                         requireContext().showToast(
@@ -158,10 +165,34 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         }
     }
 
+    // ---------------------------------------------------------
+    //             DELETE STAFF API CALL
+    // ---------------------------------------------------------
+//    private fun deleteStaff(staffId: String) {
+//        groupId?.let { gId ->
+//            RetrofitClient.getStaffApiService(requireContext())
+//                .deleteStaff(gId, staffId)
+//                .enqueue(object : retrofit2.Callback<Any> {
+//
+//                    override fun onResponse(call: retrofit2.Call<Any>, response: retrofit2.Response<Any>) {
+//                        if (response.isSuccessful) {
+//                            requireContext().showToast("Staff deleted")
+//                        } else {
+//                            requireContext().showToast("Delete failed")
+//                        }
+//                    }
+//
+//                    override fun onFailure(call: retrofit2.Call<Any>, t: Throwable) {
+//                        requireContext().showToast("Error: ${t.localizedMessage}")
+//                    }
+//                })
+//        }
+//    }
+
     private fun openDialer(phoneNumber: String) {
         try {
             val intent = Intent(Intent.ACTION_DIAL)
-            intent.data = Uri.parse("${getString(R.string.text_tel)} $phoneNumber")
+            intent.data = Uri.parse("tel:$phoneNumber")
             startActivity(intent)
         } catch (e: Exception) {
             requireContext().showToast(getString(R.string.unable_to_open_phone))
@@ -170,36 +201,28 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
 
     private fun openWhatsApp(phoneNumber: String) {
         try {
-            val formatted = phoneNumber.trim()
-
-            val uri = Uri.parse("${getString(R.string.whatsapp_device)} $formatted")
-
+            val uri = Uri.parse("https://wa.me/$phoneNumber")
             val intent = Intent(Intent.ACTION_VIEW, uri)
-            intent.setPackage(getString(R.string.package_whatsapp))
-
+            intent.setPackage("com.whatsapp")
             startActivity(intent)
-
         } catch (e: Exception) {
             requireContext().showToast(getString(R.string.whatsapp_not_installed))
         }
     }
 
-
     private fun openSmsApp(phoneNumber: String) {
         try {
             val intent = Intent(Intent.ACTION_SENDTO)
-            intent.data = Uri.parse("${getString(R.string.text_sms)} $phoneNumber") // Direct SMS
+            intent.data = Uri.parse("sms:$phoneNumber")
             startActivity(intent)
         } catch (e: Exception) {
             requireContext().showToast(getString(R.string.unable_to_open_message))
         }
     }
 
-
     private fun fetchStaffDetails(staffId: String) {
-
-        // Inflate bottom sheet layout
         val dialogView = layoutInflater.inflate(R.layout.dialog_edit_details, null)
+
         val nameTextView = dialogView.findViewById<TextView>(R.id.studentName)
         val emailTextView = dialogView.findViewById<TextView>(R.id.designation)
         val imageView = dialogView.findViewById<ImageView>(R.id.profileImageView)
@@ -209,21 +232,14 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         val designation = dialogView.findViewById<TextView>(R.id.etDesignation)
         val profession = dialogView.findViewById<TextView>(R.id.etProfession)
 
-        // Set loading defaults
         nameTextView.text = "Loading..."
-        emailTextView.text = ""
         imageView.setImageResource(R.drawable.ic_launcher_background)
 
-        // Create BottomSheetDialog
         val bottomSheetDialog = BottomSheetDialog(requireContext())
         bottomSheetDialog.setContentView(dialogView)
-        bottomSheetDialog.setCanceledOnTouchOutside(true)
         bottomSheetDialog.show()
-
-        // Optional: expand full height
         bottomSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
 
-        // Call API
         groupId?.let { gId ->
             containerActivity().showProgressBar()
 
@@ -236,53 +252,47 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                         response: retrofit2.Response<StaffUserDetailsResponse>
                     ) {
                         containerActivity().dismissProgressBar()
-                        val data = response.body()?.data
 
+                        val data = response.body()?.data
                         if (response.isSuccessful && data != null) {
 
-                            nameTextView.text = data.name ?: "N/A"
-                            emailTextView.text = data.designation ?: "N/A"
-                            staffName.text = data.name ?: "N/A"
-                            phoneNumber.text = data.phone ?: "N/A"
-                            designation.text = data.designation ?: "N/A"
-                            profession.text = data.doj ?: "N/A"
+                            nameTextView.text = data.name
+                            emailTextView.text = data.designation
+                            staffName.text = data.name
+                            phoneNumber.text = data.phone
+                            designation.text = data.designation
+                            profession.text = data.doj
 
-                            // Load Image
                             if (!data.image.isNullOrEmpty()) {
                                 try {
-                                    val decodedBytes = Base64.decode(data.image, Base64.DEFAULT)
-                                    val decodedImageUrl = String(decodedBytes)
+                                    val decoded = Base64.decode(data.image, Base64.DEFAULT)
+                                    val url = String(decoded)
 
-                                    if (decodedImageUrl.startsWith("http") && !decodedImageUrl.contains("undefined")) {
-                                        Glide.with(imageView.context)
-                                            .load(decodedImageUrl)
-                                            .placeholder(R.drawable.ic_launcher_background)
-                                            .error(R.drawable.ic_launcher_background)
-                                            .into(imageView)
+                                    if (url.startsWith("http") && !url.contains("undefined")) {
+                                        Glide.with(requireContext()).load(url).into(imageView)
                                     } else {
-                                        data.name?.let { EmailValidation.setImageForName(it, imageView) }
+                                        EmailValidation.setImageForName(data.name!!, imageView)
                                     }
 
                                 } catch (e: Exception) {
-                                    data.name?.let { EmailValidation.setImageForName(it, imageView) }
+                                    EmailValidation.setImageForName(data.name!!, imageView)
                                 }
                             } else {
-                                data.name?.let { EmailValidation.setImageForName(it, imageView) }
+                                EmailValidation.setImageForName(data.name!!, imageView)
                             }
 
                         } else {
-                            requireContext().showToast("Staff details not found")
+                            requireContext().showToast("Details not found")
                         }
                     }
 
                     override fun onFailure(call: retrofit2.Call<StaffUserDetailsResponse>, t: Throwable) {
                         containerActivity().dismissProgressBar()
-                        requireContext().showToast("Failed to fetch: ${t.localizedMessage}")
+                        requireContext().showToast("Failed: ${t.localizedMessage}")
                     }
                 })
         }
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_all, menu)
@@ -305,11 +315,7 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
         val bottomSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme)
         bottomSheetDialog.setContentView(dialogView)
 
-        bottomSheetDialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-
-        bottomSheetDialog.behavior.peekHeight = (resources.displayMetrics.heightPixels * 0.5).toInt()
         bottomSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        bottomSheetDialog.behavior.skipCollapsed = true
 
         val etName = dialogView.findViewById<TextInputEditText>(R.id.etName)
         val etPhone = dialogView.findViewById<TextInputEditText>(R.id.etPhone)
@@ -322,7 +328,7 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
             val designation = etDesignation.text.toString().trim()
 
             if (name.isEmpty() || phone.isEmpty() || designation.isEmpty()) {
-                requireContext().showToast(getString(R.string.fill_all_details))
+                requireContext().showToast("Fill all details")
                 return@setOnClickListener
             }
 
@@ -350,24 +356,21 @@ class StaffRegisterFragment : BaseFragment<CommonFragmentBinding>(R.layout.commo
                             )
                     }
 
-                    if (response.isSuccessful && response.body() != null) {
-                        containerActivity().showProgressBar()
+                    if (response.isSuccessful) {
                         bottomSheetDialog.dismiss()
                         getApiResponse()
                     } else {
-                        requireContext().showToast("${getString(R.string.failed_to_add)}: ${response.message()}")
+                        requireContext().showToast("Failed: ${response.message()}")
                         btnSave.isEnabled = true
                     }
 
                 } catch (e: Exception) {
-                    requireContext().showToast("${getString(R.string.txt_error)}: ${e.localizedMessage}")
+                    requireContext().showToast("Error: ${e.localizedMessage}")
                     btnSave.isEnabled = true
                 }
             }
         }
+
         bottomSheetDialog.show()
     }
-
-
-
 }
