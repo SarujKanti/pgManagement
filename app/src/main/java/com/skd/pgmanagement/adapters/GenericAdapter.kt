@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
 class GenericAdapter<T, VB : ViewBinding>(
+
     var data: MutableList<T>,
     private val bind: (VB, T, Int) -> Unit,
     private val inflater: (LayoutInflater, ViewGroup, Boolean) -> VB
