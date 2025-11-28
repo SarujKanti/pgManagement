@@ -10,7 +10,6 @@ class GenericAdapter<T, VB : ViewBinding>(
     private val bind: (VB, T, Int) -> Unit,
     private val inflater: (LayoutInflater, ViewGroup, Boolean) -> VB
 ) : RecyclerView.Adapter<GenericAdapter.GenericViewHolder<VB>>() {
-
     class GenericViewHolder<VB : ViewBinding>(val binding: VB) :
         RecyclerView.ViewHolder(binding.root)
 
