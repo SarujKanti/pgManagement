@@ -17,7 +17,6 @@ class GenericAdapter<T, VB : ViewBinding>(
         val binding = inflater(LayoutInflater.from(parent.context), parent, false)
         return GenericViewHolder(binding)
     }
-
     override fun onBindViewHolder(holder: GenericViewHolder<VB>, position: Int) {
         bind(holder.binding, data[position], position)
     }
