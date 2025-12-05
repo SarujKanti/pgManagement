@@ -10,7 +10,6 @@ class GenericAdapter<T, VB : ViewBinding>(
     private val bind: (VB, T, Int) -> Unit,
     private val inflater: (LayoutInflater, ViewGroup, Boolean) -> VB
 ) : RecyclerView.Adapter<GenericAdapter.GenericViewHolder<VB>>() {
-
     class GenericViewHolder<VB : ViewBinding>(val binding: VB) :
         RecyclerView.ViewHolder(binding.root)
 
@@ -22,7 +21,7 @@ class GenericAdapter<T, VB : ViewBinding>(
     override fun onBindViewHolder(holder: GenericViewHolder<VB>, position: Int) {
         bind(holder.binding, data[position], position)
     }
-    
+
     override fun getItemCount(): Int = data.size
     fun updateItem(position: Int, newItem: T) {
         if (position in data.indices) {
