@@ -5,12 +5,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
-class GenericAdapter<T , VB: ViewBinding>(
-    private var data: MutableList<T>,
+class GenericAdapter<T, VB : ViewBinding>(
+    var data: MutableList<T>,
     private val bind: (VB, T, Int) -> Unit,
     private val inflater: (LayoutInflater, ViewGroup, Boolean) -> VB
 ) : RecyclerView.Adapter<GenericAdapter.GenericViewHolder<VB>>() {
-    class GenericViewHolder<VB : ViewBinding>(val binding: VB) : RecyclerView.ViewHolder(binding.root)
+    class GenericViewHolder<VB : ViewBinding>(val binding: VB) :
+        RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GenericViewHolder<VB> {
         val binding = inflater(LayoutInflater.from(parent.context), parent, false)
@@ -22,15 +23,12 @@ class GenericAdapter<T , VB: ViewBinding>(
     }
 
     override fun getItemCount(): Int = data.size
-
-    // Method to update a particular item
     fun updateItem(position: Int, newItem: T) {
         if (position in data.indices) {
             data[position] = newItem
             notifyItemChanged(position)
         }
     }
-
     fun updateData(newData: List<T>) {
         data.clear()
         data.addAll(newData)
@@ -38,10 +36,10 @@ class GenericAdapter<T , VB: ViewBinding>(
     }
 
     fun getUpdatedData(): List<T> {
-        return data.toList() // Returns a copy of the current data
+        return data.toList()
     }
 
-    fun setData(newData: List<T>) {
+    fun updateList(newData: List<T>) {   // 🔥 renamed function
         updateData(newData)
     }
 
@@ -54,8 +52,7 @@ class GenericAdapter<T , VB: ViewBinding>(
     fun updateItemSilently(position: Int, newItem: T) {
         if (position in data.indices) {
             data[position] = newItem
-            // Do NOT call notifyItemChanged(position)
+            // No notify -> silent update
         }
     }
-
 }
