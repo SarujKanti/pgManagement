@@ -14,6 +14,7 @@ class GenericAdapter<T, VB : ViewBinding>(
     class GenericViewHolder<VB : ViewBinding>(val binding: VB) :
         RecyclerView.ViewHolder(binding.root)
 
+    
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GenericViewHolder<VB> {
         val binding = inflater(LayoutInflater.from(parent.context), parent, false)
         return GenericViewHolder(binding)
