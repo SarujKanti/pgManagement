@@ -60,5 +60,7 @@ data class StaffUserDetails(
 
 interface StaffDetailsApi {
     @GET(ApiEndPoints.GET_STAFF_DETAILS)
-    fun getStaffDetails(@Path("groupId") groupId: String, @Path("userId") userId: String, @Query("type") type: String): Call<StaffUserDetailsResponse>
+    fun getStaffDetails(@Path("groupId") groupId: String,
+                        @Path("userId") userId: String,
+                        @Query("type") type: String): Call<StaffUserDetailsResponse>
 }
