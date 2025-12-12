@@ -63,5 +63,4 @@ interface StaffDetailsApi {
     fun getStaffDetails(@Path("groupId") groupId: String,
                         @Path("userId") userId: String,
                         @Query("type") type: String): Call<StaffUserDetailsResponse>
-    
 }
