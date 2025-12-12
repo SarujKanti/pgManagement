@@ -54,8 +54,6 @@ data class StaffUserDetails(
     val profession:String?,
     val userDownloadedApp:Boolean?,
     val isAdmin: Boolean? = false
-
-
 )
 
 interface StaffDetailsApi {
