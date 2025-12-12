@@ -37,7 +37,7 @@ data class StaffUserDetails(
     val address: String?,
     val bankAccountNumber: String?,
     val type: String?,
-    val uanNumber: String?,
+    val uanNumber: String? = null,
     val librarian: Boolean,
     val panNumber: String?,
     val bankIfscCode: String?,
@@ -51,7 +51,7 @@ data class StaffUserDetails(
     val country: String? = null,
     val category: String? = null,
     val classTypeId: String? = null,
-    val profession:String?,
+    val profession:String? = null,
     val userDownloadedApp:Boolean?,
     val isAdmin: Boolean? = false
 )
