@@ -30,13 +30,12 @@ class GenericAdapter<T, VB : ViewBinding>(
             notifyItemChanged(position)
         }
     }
-    
+
     fun updateData(newData: List<T>) {
         data.clear()
         data.addAll(newData)
         notifyDataSetChanged()
     }
-
     fun getUpdatedData(): List<T> {
         return data.toList()
     }
