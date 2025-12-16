@@ -36,7 +36,8 @@ class GenericAdapter<T, VB : ViewBinding>(
         data.addAll(newData)
         notifyDataSetChanged()
     }
-    
+
+
     fun getUpdatedData(): List<T> {
         return data.toList()
     }
